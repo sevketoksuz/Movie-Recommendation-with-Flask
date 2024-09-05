@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Film Önerileri</title>
+    </head>
+    <body>
+        <h1>Önerilen Filmler</h1>
+        <ul>
+            {% for movie in recommendations %}
+                <li>{{ movie['title'] }} - {{ movie['genres'] }}</li>
+            {% endfor %}
+        </ul>
+    </body>

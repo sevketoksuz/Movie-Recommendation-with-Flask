@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Film Puanlama</title>
+    <script>
+        let ratedMovies = [];
+
+        function addMovie() {
+            const movieInput = document.getElementById('movie-input');
+            const ratingSelect = document.getElementById('rating');
+            const movieId = movieInput.getAttribute('data-movie-id');
+            const movieTitle = movieInput.value;
+            const rating = ratingSelect.value;
+
+            if (ratedMovies.some(movie => movie.movieId === movieId)) {
+                alert('Bu filmi zaten listeye eklediniz.');
+                return;
+            }
+
+            if (movieId && rating) {
+                ratedMovies.push({movieId, movieTitle, rating});
+                displayRatedMovies();
+                movieInput.value = '';
+                ratingSelect.value = '';
+            } else {
+                alert('Lütfen bir film ve puan seçiniz.');
+            }
+        }
+
+        function displayRatedMovies() {
+            const ratedMoviesList = document.getElementById('rated-movies-list');
+            ratedMoviesList.innerHTML = '';
+            ratedMovies.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${movie.movieTitle} - Puan: ${movie.rating}`;
+                ratedMoviesList.appendChild(listItem);
+            });
+        }
+
+        function updateMovieId(input) {
+            const dataList = document.getElementById('movies-list');
+            const options = dataList.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === input.value) {
+                    input.setAttribute('data-movie-id', options[i].getAttribute('data-movie-id'));
+                    break;
+                }
+            }
+        }
+
+        function submitMovies() {
+            if (ratedMovies.length === 0) {
+                alert('Kaydedilecek hiçbir film yok.');
+                return;
+            }
+
+            const form = document.getElementById('rate-form');
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ratedMovies';
+            input.value = JSON.stringify(ratedMovies);
+            form.appendChild(input);
+
+            form.submit();
+        }
+    </script>
+</head>
+<body>
+    <h1>İzlediğiniz Filmleri Puanlayınız</h1>
+    <form id="rate-form" action="/rate" method="post">
+        <div>
+            <label for="movie-input">Film Adını Yazınız:</label>
+            <input list="movies-list" id="movie-input" oninput="updateMovieId(this)" placeholder="Film adını yazın..." autocomplete="off">
+            <datalist id="movies-list">
+                {% for movie in movies %}
+                    <option value="{{ movie['title'] }}" data-movie-id="{{ movie['movieId'] }}"></option>
+                {% endfor %}
+            </datalist>
+        </div>
+        <div>
+            <label for="rating">Puan:</label>
+            <select id="rating" name="rating">
+                <option value="">Puan Seçiniz</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+        <button type="button" onclick="addMovie()">Listeye Ekle</button>
+        <button type="button" onclick="submitMovies()">Puanları Kaydet</button>
+        <a href="/get_recommendations"><button type="button">Önerilen Filmleri Gör</button></a>
+    </form>
+    
+    <h2>Puanlanan Filmler:</h2>
+    <ul id="rated-movies-list">
+        {% for rating in user_ratings %}
+            <li>
+                {{ rating['title'] }} - Puan: {{ rating['rating'] }}
+                <form action="/update_rating" method="post" style="display: inline;">
+                    <input type="hidden" name="movieId" value="{{ rating['movieId'] }}">
+                    <input type="number" name="newRating" min="1" max="5" step="1" value="{{ rating['rating'] }}">
+                    <button type="submit">Güncelle</button>
+                </form>
+                <form action="/delete_rating" method="post" style="display: inline;">
+                    <input type="hidden" name="movieId" value="{{ rating['movieId'] }}">
+                    <button type="submit">Sil</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
